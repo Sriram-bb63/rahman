@@ -76,6 +76,48 @@ def download_youtube():
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
+# Download as mp3 
+# @app.route('/download', methods=['POST'])
+# def download_youtube():
+#     """Download YouTube audio and save it as MP3."""
+#     youtube_url = request.form.get('youtube_url')
+
+#     if not youtube_url:
+#         return jsonify({'success': False, 'message': 'No URL provided'}), 400
+
+#     # Validate YouTube URL
+#     if not re.match(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$', youtube_url):
+#         return jsonify({'success': False, 'message': 'Invalid YouTube URL'}), 400
+
+#     try:
+#         # yt-dlp options to download and convert to MP3
+#         ydl_opts = {
+#             'format': 'bestaudio/best',  # Get best audio format
+#             'outtmpl': os.path.join(UPLOAD_FOLDER, '%(title)s.%(ext)s'),  # Save with title
+#             'postprocessors': [{
+#                 'key': 'FFmpegExtractAudio',  # Convert to MP3
+#                 'preferredcodec': 'mp3',
+#                 'preferredquality': '192',  # 192 kbps quality
+#             }],
+#             'noplaylist': True,  # Download only single video
+#             'quiet': False,
+#         }
+
+#         # Download the video as an audio file
+#         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+#             info = ydl.extract_info(youtube_url, download=True)
+#             filename = f"{info['title']}.mp3"
+
+#         return jsonify({
+#             'success': True,
+#             'message': 'Download completed successfully',
+#             'filename': filename
+#         })
+
+#     except Exception as e:
+#         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
+
+
 
 @app.route('/rename_song', methods=['POST'])
 def rename_song():
