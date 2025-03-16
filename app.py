@@ -20,12 +20,11 @@ def index():
 
 @app.route('/get_songs')
 def get_songs():
-    """API endpoint to get all MP3 files."""
+    """API endpoint to get all audio files, returning both display names and full filenames."""
     audio_files = []
     for f in os.listdir(UPLOAD_FOLDER):
-        # Accept common audio formats that browsers can play
         if f.lower().endswith(('.mp3', '.m4a', '.ogg', '.wav', '.webm')):
-            audio_files.append(f)
+            audio_files.append({'display_name': os.path.splitext(f)[0], 'filename': f})  # Send both
     return jsonify(audio_files)
 
 
@@ -88,7 +87,8 @@ def rename_song():
         return jsonify({'success': False, 'message': 'Missing parameters'}), 400
 
     old_path = os.path.join(UPLOAD_FOLDER, old_name)
-    new_path = os.path.join(UPLOAD_FOLDER, new_name + os.path.splitext(old_name)[1])  # Preserve extension
+    old_extension = os.path.splitext(old_name)[1]  # Get the original extension
+    new_path = os.path.join(UPLOAD_FOLDER, new_name.strip() + old_extension)  # Preserve extension
 
     if not os.path.exists(old_path):
         return jsonify({'success': False, 'message': 'File not found'}), 404

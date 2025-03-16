@@ -23,20 +23,26 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const createSongElement = (song) => {
-        // const sanitizedSong = song.replace(".webm", "");
-        return `<li class="list-group-item d-flex justify-content-between align-items-center" data-file="${song}">
-                    <span>${song}</span>
+        return `<li class="list-group-item d-flex justify-content-between align-items-center" 
+                    data-file="${song.filename}" data-display-name="${song.display_name}">
+                    <span>${song.display_name}</span>
                     <button class="btn btn-sm btn-warning rename-button">Rename</button>
                 </li>`;
     };
 
-    const renameSong = async (oldName) => {
-        const newName = prompt("Enter new name:", oldName);
-        if (!newName) return;
+
+
+    const renameSong = async (oldFileName) => {
+        const songElement = document.querySelector(`[data-file="${oldFileName}"]`);
+        const oldDisplayName = songElement.dataset.displayName;
+        const newName = prompt("Enter new name:", oldDisplayName);
+
+        if (!newName || newName.trim() === "") return;
+
         try {
             const response = await fetch('/rename_song', {
                 method: 'POST',
-                body: new URLSearchParams({ old_name: oldName, new_name: newName })
+                body: new URLSearchParams({ old_name: oldFileName, new_name: newName.trim() })
             });
             const data = await response.json();
             alert(data.success ? `Renamed to: ${data.new_name}` : `Error: ${data.message}`);
@@ -46,10 +52,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    const playSong = (fileName) => {
-        audioPlayer.src = `/static/music/${fileName}`;
+
+
+    const playSong = (songElement) => {
+        const fileName = songElement.dataset.file;  // Get full filename
+        audioPlayer.src = `/static/music/${encodeURIComponent(fileName)}`;
         audioPlayer.play();
-        nowPlayingText.textContent = `Now Playing: ${fileName}`;
+        nowPlayingText.textContent = `Now Playing: ${songElement.dataset.displayName}`;
     };
 
     songList.addEventListener('click', (event) => {
@@ -57,9 +66,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const songItem = event.target.closest('li');
             renameSong(songItem.dataset.file);
         } else if (event.target.tagName === 'SPAN') {
-            playSong(event.target.textContent);
+            playSong(event.target.closest('li'));
         }
     });
+
 
     searchBar.addEventListener('input', () => {
         const query = searchBar.value.toLowerCase();
@@ -82,11 +92,11 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const youtubeUrl = youtubeUrlInput.value.trim();
         if (!youtubeUrl) return showDownloadStatus('Please enter a YouTube URL.', 'alert-warning');
-        
+
         downloadButton.disabled = true;
         document.getElementById('download-spinner').classList.remove('d-none');
         showDownloadStatus('Downloading... Please wait.', 'alert-info');
-        
+
         try {
             const response = await fetch('/download', {
                 method: 'POST',
