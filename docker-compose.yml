@@ -1,0 +1,26 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    container_name: flask_app
+    ports:
+      - "5000:5000"  # Map the container's port 5000 to EC2's port 5000
+    networks:
+      - flask_network
+
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"  # Expose Nginx on port 80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf  # Map the Nginx config file
+    depends_on:
+      - web
+    networks:
+      - flask_network
+
+networks:
+  flask_network:
+    driver: bridge
