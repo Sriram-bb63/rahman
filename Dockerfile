@@ -20,4 +20,5 @@ ENV FLASK_ENV=production
 EXPOSE 5000
 
 # Command to run the application
-CMD ["gunicorn", "--workers", "3", "--bind", "0.0.0.0:5000", "wsgi:app"]
+# CMD ["gunicorn", "--workers", "3", "--bind", "0.0.0.0:5000", "wsgi:app"]
+CMD ["python", "wsgi.py"]
