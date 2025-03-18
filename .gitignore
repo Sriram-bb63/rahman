@@ -1,2 +1,4 @@
 static/music/*
 __pycache__
+venv
+*.pem
