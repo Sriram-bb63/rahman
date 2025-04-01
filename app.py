@@ -1,9 +1,8 @@
 from flask import Flask, render_template, send_from_directory, jsonify, request
 import os
-import yt_dlp
 import re
-import shutil
 from pathlib import Path
+from automation import download_audio
 
 app = Flask(__name__)
 
@@ -34,9 +33,10 @@ def serve_audio(filename):
     return send_from_directory(UPLOAD_FOLDER, filename)
 
 
+# Download as mp3 
 @app.route('/download', methods=['POST'])
 def download_youtube():
-    """Download YouTube audio without requiring FFmpeg."""
+    """Download YouTube audio and save it as MP3."""
     youtube_url = request.form.get('youtube_url')
 
     if not youtube_url:
@@ -47,75 +47,21 @@ def download_youtube():
         return jsonify({'success': False, 'message': 'Invalid YouTube URL'}), 400
 
     try:
-        # yt-dlp options for direct audio download
-        ydl_opts = {
-            # Download best audio format that doesn't need conversion
-            'format': 'bestaudio[acodec^=opus]/bestaudio/best',
-            'outtmpl': os.path.join(UPLOAD_FOLDER, '%(title)s.%(ext)s'),
-            'nopostoverwrites': True,
-            # Don't use any postprocessors that require FFmpeg
-            'postprocessors': [],
-            # Continue even if there are errors
-            'ignoreerrors': True,
-            # Show some progress info
-            'quiet': False,
-            'no_warnings': False,
-        }
-
-        # Download the video's audio
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(youtube_url, download=True)
-            filename = f"{info['title']}.{info['ext']}"
-
-        return jsonify({
-            'success': True,
-            'message': 'Download completed successfully',
-            'filename': filename
-        })
+        filename = download_audio(youtube_url)
+        if filename:
+            return jsonify({
+                'success': True,
+                'message': 'Download completed successfully',
+                'filename': filename
+            })
+        else:
+            return jsonify({
+                'success': False,
+                'message': 'Automation error',
+            }), 500
 
     except Exception as e:
         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
-
-# Download as mp3 
-# @app.route('/download', methods=['POST'])
-# def download_youtube():
-#     """Download YouTube audio and save it as MP3."""
-#     youtube_url = request.form.get('youtube_url')
-
-#     if not youtube_url:
-#         return jsonify({'success': False, 'message': 'No URL provided'}), 400
-
-#     # Validate YouTube URL
-#     if not re.match(r'^(https?://)?(www\.)?(youtube\.com|youtu\.be)/.+$', youtube_url):
-#         return jsonify({'success': False, 'message': 'Invalid YouTube URL'}), 400
-
-#     try:
-#         # yt-dlp options to download and convert to MP3
-#         ydl_opts = {
-#             'format': 'bestaudio/best',  # Get best audio format
-#             'outtmpl': os.path.join(UPLOAD_FOLDER, '%(title)s.%(ext)s'),  # Save with title
-#             'postprocessors': [{
-#                 'key': 'FFmpegExtractAudio',  # Convert to MP3
-#                 'preferredcodec': 'mp3',
-#                 'preferredquality': '192',  # 192 kbps quality
-#             }],
-#             'noplaylist': True,  # Download only single video
-#             'quiet': False,
-#         }
-
-#         # Download the video as an audio file
-#         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-#             info = ydl.extract_info(youtube_url, download=True)
-#             filename = f"{info['title']}.mp3"
-
-#         return jsonify({
-#             'success': True,
-#             'message': 'Download completed successfully',
-#             'filename': filename
-#         })
-
-#     except Exception as e:
-#         return jsonify({'success': False, 'message': f'Error: {str(e)}'}), 500
 
 
 
