@@ -17,8 +17,7 @@ COPY . .
 ENV FLASK_ENV=production
 
 # Expose the port that Flask will run on (by default 5000)
-EXPOSE 5000
+EXPOSE 80
 
 # Command to run the application
-# CMD ["gunicorn", "--workers", "3", "--bind", "0.0.0.0:5000", "wsgi:app"]
-CMD ["python", "wsgi.py"]
+CMD ["gunicorn", "app:app", "--bind", "0.0.0.0:80"]
